@@ -32,10 +32,10 @@ var KCS = {
             enabledClick: false
         },
         debuffs: {
-            wrinklerInterval: 500,
+            debuffInterval: 500,
             enabledDestroyWrinkler: false,
             enabledRemoveDebuffs: false,
-            debufList: ['clot', 'cursed finger', 'pixie misery']
+            debuffList: ['clot', 'cursed finger', 'pixie misery']
         }
     },
     counter: 0
@@ -89,20 +89,39 @@ KCS.handleBuildings = function () {
             }
             cheapest.buy();
         } else if (KCS.config.buildings.selectedStrategy === KCS.config.buildings.buyStrategies.lucrative) {
-            //not implemented Yet
+            //Need to have Cookie Monster plugin loaded
+            if (KCS.cookieMonsterLoaded) {
+                var optimalItemFound = false;
+                for (var object in CM.Cache.Objects) {
+                    if (CM.Cache.Objects[object].color === 'Green') {
+                        Game.Objects[object].buy();
+                        optimalItemFound = true;
+                        break;
+                    }
+                }
+                if (!optimalItemFound) {
+                    for (var object in CM.Cache.Objects) {
+                        if (CM.Cache.Objects[object].color === 'Yellow') {
+                            Game.Objects[object].buy();
+                            optimalItemFound = true;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
     }
 };
 KCS.handleWrinklers = function () {
-    if (KCS.counter % KCS.config.debuffs.wrinklerInterval === 0) {
+    if (KCS.counter % KCS.config.debuffs.debuffInterval === 0) {
         Game.CollectWrinklers();
     }
 };
 KCS.handleDebuffs = function () {
-    if (KCS.counter % 5 === 0 && Game.buffs.length > 0) {
-        for (var buff = 0; buff < Game.buffs.length; buff++) {
-            if (KCS.config.debuffs.debufList.indexOf(Game.buffs[buff].type.name) >= 0) {
+    if (KCS.counter % KCS.config.debuffs.debuffInterval === 0) {
+        for (var buff in Game.buffs) {
+            if(KCS.config.debuffs.debuffList.indexOf(Game.buffs[buff].type.name) >= 0){
                 Game.buffs[buff].time = 1;
             }
         }
@@ -126,8 +145,21 @@ KCS.loadKendoDefault = function () {
     KCS.config.click.clicksPerInterval = 100;
     KCS.config.click.interval = 1;
     KCS.config.buildings.enabled = true;
+    KCS.config.golden.enabledClick = true;
     KCS.config.upgrades.enabled = true;
     return 'config set';
+};
+
+KCS.loadGodConfig = function () {
+    KCS.config.click.enabled = true;
+    KCS.config.click.clicksPerInterval = 1000;
+    KCS.config.click.interval = 1;
+    KCS.config.buildings.enabled = true;
+    KCS.config.upgrades.enabled = true;
+    KCS.config.golden.enabledClick = true;
+    KCS.config.golden.enabledSpawn = true;
+    KCS.config.debuffs.enabledRemoveDebuffs = true;
+    KCS.config.debuffs.enabledDestroyWrinkler = true;
 };
 
 KCS.start = function () {
@@ -142,6 +174,7 @@ KCS.stop = function () {
 };
 KCS.loadCookieMonster = function () {
     Game.LoadMod('http://aktanusa.github.io/CookieMonster/CookieMonster.js');
+    KCS.cookieMonsterLoaded = true;
 };
 
 
